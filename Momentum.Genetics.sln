@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D3289F8D-AEAB-42A5-82AD-12ACDEF2ABBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Momentum.Genetics", "src\Momentum.Genetics\Momentum.Genetics.csproj", "{67C3DB91-494E-4511-B43B-AE804AAE1C2A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C96F5080-7120-4E2E-A39E-344985A953DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Momentum.Genetics.Tests", "tests\Momentum.Genetics.Tests\Momentum.Genetics.Tests.csproj", "{EFC4D481-4F59-4419-A14D-E4C9AF72AEFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Momentum.Genetics.Heredity", "src\Momentum.Genetics.Heredity\Momentum.Genetics.Heredity.csproj", "{51AD1942-CB3C-4E9D-9CFF-B85ADBD252F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Momentum.Genetics.Heredity.Tests", "tests\Momentum.Genetics.Heredity.Tests\Momentum.Genetics.Heredity.Tests.csproj", "{C5A1035C-6100-4427-979D-9190FE0A9274}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{67C3DB91-494E-4511-B43B-AE804AAE1C2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67C3DB91-494E-4511-B43B-AE804AAE1C2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67C3DB91-494E-4511-B43B-AE804AAE1C2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67C3DB91-494E-4511-B43B-AE804AAE1C2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFC4D481-4F59-4419-A14D-E4C9AF72AEFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFC4D481-4F59-4419-A14D-E4C9AF72AEFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFC4D481-4F59-4419-A14D-E4C9AF72AEFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFC4D481-4F59-4419-A14D-E4C9AF72AEFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51AD1942-CB3C-4E9D-9CFF-B85ADBD252F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51AD1942-CB3C-4E9D-9CFF-B85ADBD252F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51AD1942-CB3C-4E9D-9CFF-B85ADBD252F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51AD1942-CB3C-4E9D-9CFF-B85ADBD252F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5A1035C-6100-4427-979D-9190FE0A9274}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5A1035C-6100-4427-979D-9190FE0A9274}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5A1035C-6100-4427-979D-9190FE0A9274}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5A1035C-6100-4427-979D-9190FE0A9274}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{67C3DB91-494E-4511-B43B-AE804AAE1C2A} = {D3289F8D-AEAB-42A5-82AD-12ACDEF2ABBC}
+		{EFC4D481-4F59-4419-A14D-E4C9AF72AEFF} = {C96F5080-7120-4E2E-A39E-344985A953DA}
+		{51AD1942-CB3C-4E9D-9CFF-B85ADBD252F5} = {D3289F8D-AEAB-42A5-82AD-12ACDEF2ABBC}
+		{C5A1035C-6100-4427-979D-9190FE0A9274} = {C96F5080-7120-4E2E-A39E-344985A953DA}
+	EndGlobalSection
+EndGlobal
