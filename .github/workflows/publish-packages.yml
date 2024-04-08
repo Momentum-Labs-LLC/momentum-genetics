@@ -1,0 +1,34 @@
+name: publish-packages
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        dotnet-version: [ '8.0.x' ]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    - name: Setup Github Package Nuget Source
+      run: dotnet nuget add source --username ${{ secrets.GH_USER }} --password ${{ secrets.GH_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ vars.ORG_NAMESPACE }}/index.json"
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+    - name: Package
+      run: dotnet pack --no-restore -o nuget -c Release /p:Version=1.0.${{ github.run_number }}
+    - name: Publish Packages
+      run: dotnet nuget push nuget/*.nupkg --source github
