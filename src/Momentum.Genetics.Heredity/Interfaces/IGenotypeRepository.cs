@@ -1,4 +1,3 @@
-using Momentum.Genetics.Heredity.Models;
 using Momentum.Genetics.Models;
 
 namespace Momentum.Genetics.Heredity.Interfaces
@@ -7,7 +6,7 @@ namespace Momentum.Genetics.Heredity.Interfaces
         where TAllele : Allele
         where TLocus : Locus<TAllele>, new()
     {
-        Task<IndividualGenotype<TAllele, TLocus, TId>> GetAsync(TId individualId, CancellationToken token = default);
-        Task<IEnumerable<IndividualGenotype<TAllele, TLocus, TId>>?> GetOffspringAsync(TId parentId, CancellationToken token = default);
+        Task<Genotype<TAllele, TLocus>> GetAsync(TId individualId, CancellationToken token = default);
+        Task<IEnumerable<Genotype<TAllele, TLocus>>> GetOffspringGenotypesAsync(TId paternalId, TId maternalId, CancellationToken token = default);
     } // end interface
 } // end namespace

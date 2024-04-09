@@ -7,6 +7,11 @@ namespace Momentum.Genetics.Models
     public abstract class Allele
     {
         /// <summary>
+        /// Gets or sets the identifier.
+        /// </summary>
+        public Guid Id { get; set; }
+        
+        /// <summary>
         /// Gets or sets ordinal value of this allele to be compared against the other alleles of the same gene locus.
         /// This is primarily for the purpose of dominance.
         /// </summary>

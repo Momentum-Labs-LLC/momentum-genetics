@@ -1,5 +1,3 @@
-using System.Reflection.Metadata;
-
 namespace Momentum.Genetics.Models
 {
     public class CytogenicLocation

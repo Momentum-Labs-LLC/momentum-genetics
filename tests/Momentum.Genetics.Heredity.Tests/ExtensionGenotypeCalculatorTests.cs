@@ -1,13 +1,14 @@
 using Microsoft.Extensions.Logging;
 using Momentum.Genetics.Extensions;
-using Momentum.Genetics.Heredity.Extensions;
 using Momentum.Genetics.Heredity.Interfaces;
 using Momentum.Genetics.Heredity.Models;
+using Momentum.Genetics.Models;
 
 namespace Momentum.Genetics.Heredity.Tests
 {
     public class ExtensionGenotypeCalculatorTests
     {
+        private Mock<IIndividualRepository<Guid>> _individualRepo;
         private Mock<IGenotypeRepository<ExtensionAllele, ExtensionLocus, Guid>> _genotypeRepo;
         private Mock<ILogger<GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid>>> _logger;
         private Mock<ILogger<PunnetSquare<ExtensionAllele, ExtensionLocus>>> _punnetLogger;
@@ -15,73 +16,69 @@ namespace Momentum.Genetics.Heredity.Tests
 
         public ExtensionGenotypeCalculatorTests()
         {
+            _individualRepo = new Mock<IIndividualRepository<Guid>>();
             _genotypeRepo = new Mock<IGenotypeRepository<ExtensionAllele, ExtensionLocus, Guid>>();
             _logger = new Mock<ILogger<GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid>>>();
             _punnetLogger = new Mock<ILogger<PunnetSquare<ExtensionAllele, ExtensionLocus>>>();
             _calculator = new GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid>(
+                _individualRepo.Object,
                 _genotypeRepo.Object, 
                 new PunnetSquare<ExtensionAllele, ExtensionLocus>(_punnetLogger.Object),
                 _logger.Object
             );
         } // end method
 
-        protected void SetupParent(IndividualGenotype<ExtensionAllele, ExtensionLocus, Guid> individualGenotype)
+        protected void SetupParent(
+            Individual<Guid> individual,
+            Genotype<ExtensionAllele, ExtensionLocus> genotype,
+            IEnumerable<Individual<Guid>> offspring)
         {
-            _genotypeRepo.Setup(x => x.GetAsync(individualGenotype.Id, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(individualGenotype);
+            _individualRepo.Setup(x => x.GetAsync(individual.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(individual);
+            _individualRepo.Setup(x => x.GetOffspringAsync(individual.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(offspring);
+            _genotypeRepo.Setup(x => x.GetAsync(individual.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(genotype);
         } // end method
 
-        protected void SetupOffspring(
-            Guid individualId, 
-            IEnumerable<IndividualGenotype<ExtensionAllele, ExtensionLocus, Guid>> offspringGenotypes)
+        protected void SetupOffspringGenotypes(
+            Guid paternalId, 
+            Guid maternalId,
+            IEnumerable<Genotype<ExtensionAllele, ExtensionLocus>> offspringGenotypes)
         {
-            _genotypeRepo.Setup(x => x.GetOffspringAsync(individualId, It.IsAny<CancellationToken>()))
+            _genotypeRepo.Setup(x => x.GetOffspringGenotypesAsync(paternalId, maternalId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(offspringGenotypes);
         } // end method
 
         [Fact]
         public async Task Calculate_On_Extensions_E_Ej()
         {
-            var father = ExtensionAllele.Harlequin
-                .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                .BuildIndividual(() => Guid.NewGuid());
-            var mother1 = ExtensionAllele.Normal
-                .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                .BuildIndividual(() => Guid.NewGuid());
-            var mother2 = ExtensionAllele.Harlequin
-                .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                .BuildIndividual(() => Guid.NewGuid());
-            var mother3 = ExtensionAllele.Normal
-                .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                .BuildIndividual(() => Guid.NewGuid());
+            var father = new Individual() { Id = Guid.NewGuid() };
+            var fatherGenotype = ExtensionAllele.Harlequin.BuildGenotype<ExtensionAllele, ExtensionLocus>();
+            var mother1 = new Individual() { Id = Guid.NewGuid() };
+            var mother1Geno = ExtensionAllele.Normal.BuildGenotype<ExtensionAllele, ExtensionLocus>();
+            var mother2 = new Individual() { Id = Guid.NewGuid() };
+            var mother2Geno = ExtensionAllele.Harlequin.BuildGenotype<ExtensionAllele, ExtensionLocus>();
+            var mother3 = new Individual() { Id = Guid.NewGuid() };
+            var mother3Geno = ExtensionAllele.Normal.BuildGenotype<ExtensionAllele, ExtensionLocus>();
 
-            var offspring = new List<IndividualGenotype<ExtensionAllele, ExtensionLocus, Guid>>()
+            var offspring = new Dictionary<Individual<Guid>, Genotype<ExtensionAllele, ExtensionLocus>>()
             {
-                ExtensionAllele.Harlequin
-                    .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                    .BuildIndividual(() => Guid.NewGuid(), father.Id, mother2.Id),
-                ExtensionAllele.Normal
-                    .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                    .BuildIndividual(() => Guid.NewGuid(), father.Id, mother1.Id),
-                ExtensionAllele.Harlequin
-                    .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                    .BuildIndividual(() => Guid.NewGuid(), father.Id, mother1.Id),
-                ExtensionAllele.NonExtension
-                    .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                    .BuildIndividual(() => Guid.NewGuid(), father.Id, mother1.Id),
-                ExtensionAllele.Normal
-                    .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                    .BuildIndividual(() => Guid.NewGuid(), father.Id, mother3.Id),
-                ExtensionAllele.Harlequin
-                    .BuildGenotype<ExtensionAllele, ExtensionLocus>()
-                    .BuildIndividual(() => Guid.NewGuid(), father.Id, mother3.Id)
+                { new Individual(father, mother2), ExtensionAllele.Harlequin.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
+                { new Individual(father, mother1), ExtensionAllele.Normal.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
+                { new Individual(father, mother1), ExtensionAllele.Harlequin.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
+                { new Individual(father, mother1), ExtensionAllele.NonExtension.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
+                { new Individual(father, mother3), ExtensionAllele.Normal.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
+                { new Individual(father, mother3), ExtensionAllele.Harlequin.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
             };
             
-            SetupParent(father);
-            SetupParent(mother1);
-            SetupParent(mother2);
-            SetupParent(mother3);
-            SetupOffspring(father.Id, offspring);
+            SetupParent(father, fatherGenotype, offspring.Where(x => x.Key.PaternalId == father.Id).Select(x => x.Key));
+            SetupParent(mother1, mother1Geno, offspring.Where(x => x.Key.MaternalId == mother1.Id).Select(x => x.Key));
+            SetupParent(mother2, mother2Geno, offspring.Where(x => x.Key.MaternalId == mother2.Id).Select(x => x.Key));
+            SetupParent(mother3, mother3Geno, offspring.Where(x => x.Key.MaternalId == mother3.Id).Select(x => x.Key));
+            SetupOffspringGenotypes(father.Id, mother1.Id, offspring.Where(x => x.Key.MaternalId == mother1.Id).Select(x => x.Value));
+            SetupOffspringGenotypes(father.Id, mother2.Id, offspring.Where(x => x.Key.MaternalId == mother2.Id).Select(x => x.Value));
+            SetupOffspringGenotypes(father.Id, mother3.Id, offspring.Where(x => x.Key.MaternalId == mother3.Id).Select(x => x.Value));
 
             var genotypes = await _calculator.CalculateGenotypesAsync(father.Id).ConfigureAwait(false);
 

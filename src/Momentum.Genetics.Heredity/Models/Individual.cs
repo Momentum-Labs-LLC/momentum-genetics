@@ -27,5 +27,11 @@ namespace Momentum.Genetics.Heredity.Models
         {
             Id = Guid.NewGuid();
         } // end method
+
+        public Individual(Individual father, Individual mother) : base()
+        {
+            PaternalId = father.Id;
+            MaternalId = mother.Id;
+        } // end method
     } // end class
 } // end namespace

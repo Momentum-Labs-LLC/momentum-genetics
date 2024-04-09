@@ -1,8 +1,7 @@
 namespace Momentum.Genetics.Models
 {
     /// <summary>
-    /// A physical location of a chromosone in which a gene, or its alleles, exists.
-    /// 
+    /// A physical location on a chromosone in which a gene, or its alleles, exists.
     /// </summary>
     public abstract class Locus<TAllele>
         where TAllele : Allele
@@ -13,7 +12,7 @@ namespace Momentum.Genetics.Models
         public abstract IEnumerable<TAllele> Alleles { get; }
 
         /// <summary>
-        /// Gets or sets the locus.
+        /// Gets or sets the identifier.
         /// </summary>
         public Guid Id { get; set; }
         
