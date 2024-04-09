@@ -57,6 +57,27 @@ namespace Momentum.Genetics.Models
         /// </summary>
         public IEnumerable<BasePair>? BasePairs { get; set; }
 
+        public Allele() 
+        { 
+            Id = Guid.NewGuid();
+        } // end method
+
+        public Allele(
+            int ordinal, 
+            string name, 
+            string symbol, 
+            string? description, 
+            string? genotypeSymbol, 
+            DominanceEnum dominance = DominanceEnum.Dominant) : base()
+        {
+            Ordinal = ordinal;
+            Name = name;
+            Symbol = symbol;
+            Description = description;
+            GenotypeSymbol = genotypeSymbol;
+            Dominance = dominance;
+        } // end method
+
         public override string ToString()
         {
             var result = Symbol;
