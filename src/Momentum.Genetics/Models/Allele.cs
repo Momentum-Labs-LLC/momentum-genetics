@@ -10,7 +10,7 @@ namespace Momentum.Genetics.Models
         /// Gets or sets the identifier.
         /// </summary>
         public Guid Id { get; set; }
-        
+
         /// <summary>
         /// Gets or sets ordinal value of this allele to be compared against the other alleles of the same gene locus.
         /// This is primarily for the purpose of dominance.
@@ -26,6 +26,11 @@ namespace Momentum.Genetics.Models
         /// Gets or sets the symbol of the allele.
         /// </summary>
         public string Symbol { get; set; }
+
+        /// <summary>
+        /// Gets or sets the description.
+        /// </summary>
+        public string? Description { get; set; }
 
         /// <summary>
         /// Gets or sets the genotype symbol. Often displayed in superscript. 
