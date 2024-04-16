@@ -4,6 +4,7 @@ namespace Momentum.Genetics.Heredity.Models
     /// This class represents an individual member of any given species.
     /// </summary>
     public class Individual<TId>
+        where TId : struct
     {
         /// <summary>
         /// Gets or sets the identifier of the individual
@@ -13,12 +14,12 @@ namespace Momentum.Genetics.Heredity.Models
         /// <summary>
         /// Gets or sets the paternal identifier.
         /// </summary>
-        public TId? PaternalId { get; set; }
+        public Nullable<TId> PaternalId { get; set; }
 
         /// <summary>
         /// Gets or sets the maternal identifier.
         /// </summary>
-        public TId? MaternalId { get; set; }
+        public Nullable<TId> MaternalId { get; set; }
     } // end class
 
     public class Individual : Individual<Guid> 

@@ -62,7 +62,7 @@ namespace Momentum.Genetics.Heredity.Tests
             var mother3 = new Individual() { Id = Guid.NewGuid() };
             var mother3Geno = ExtensionAllele.Normal.BuildGenotype<ExtensionAllele, ExtensionLocus>();
 
-            var offspring = new Dictionary<Individual<Guid>, Genotype<ExtensionAllele, ExtensionLocus>>()
+            var offspring = new Dictionary<Individual, Genotype<ExtensionAllele, ExtensionLocus>>()
             {
                 { new Individual(father, mother2), ExtensionAllele.Harlequin.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
                 { new Individual(father, mother1), ExtensionAllele.Normal.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
@@ -72,7 +72,7 @@ namespace Momentum.Genetics.Heredity.Tests
                 { new Individual(father, mother3), ExtensionAllele.Harlequin.BuildGenotype<ExtensionAllele, ExtensionLocus>() },
             };
             
-            SetupParent(father, fatherGenotype, offspring.Where(x => x.Key.PaternalId == father.Id).Select(x => x.Key));
+            SetupParent(father, fatherGenotype, offspring.Where(x => x.Key.PaternalId.Equals(father.Id)).Select(x => x.Key));
             SetupParent(mother1, mother1Geno, offspring.Where(x => x.Key.MaternalId == mother1.Id).Select(x => x.Key));
             SetupParent(mother2, mother2Geno, offspring.Where(x => x.Key.MaternalId == mother2.Id).Select(x => x.Key));
             SetupParent(mother3, mother3Geno, offspring.Where(x => x.Key.MaternalId == mother3.Id).Select(x => x.Key));

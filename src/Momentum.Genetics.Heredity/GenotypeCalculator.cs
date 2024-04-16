@@ -9,7 +9,7 @@ namespace Momentum.Genetics.Heredity
     public class GenotypeCalculator<TAllele, TLocus, TId> : IGenotypeCalculator<TAllele, TLocus, TId>
         where TAllele : Allele
         where TLocus : Locus<TAllele>, new()
-        where TId : IEquatable<TId>
+        where TId : struct, IEquatable<TId>
     {
         protected readonly IIndividualRepository<TId> _individualRepository;
         protected readonly IGenotypeRepository<TAllele, TLocus, TId> _genotypeRepository;
@@ -74,14 +74,14 @@ namespace Momentum.Genetics.Heredity
             var paternalGenotype = new Genotype<TAllele, TLocus>();
             var materalGenotype = new Genotype<TAllele, TLocus>();
             
-            if(!individual.PaternalId.Equals(default(TId?)))
+            if(individual.PaternalId.HasValue)
             {
-                paternalGenotype = await _genotypeRepository.GetAsync(individual.PaternalId, token).ConfigureAwait(false);
+                paternalGenotype = await _genotypeRepository.GetAsync(individual.PaternalId.Value, token).ConfigureAwait(false);
             } // end if
             
-            if(!individual.MaternalId.Equals(default(TId?)))
+            if(individual.MaternalId.HasValue)
             {
-                materalGenotype = await _genotypeRepository.GetAsync(individual.MaternalId, token).ConfigureAwait(false);
+                materalGenotype = await _genotypeRepository.GetAsync(individual.MaternalId.Value, token).ConfigureAwait(false);
             } // end if
 
             var results = _punnetSquare.GetOffsprinGenotypes(paternalGenotype, materalGenotype);
@@ -112,8 +112,8 @@ namespace Momentum.Genetics.Heredity
                 foreach(var siblings in siblingGroups)
                 {
                     var siblingGenotypes = await _genotypeRepository.GetOffspringGenotypesAsync(
-                            siblings.Key.PaternalId, 
-                            siblings.Key.MaternalId, 
+                            siblings.Key.PaternalId.Value, 
+                            siblings.Key.MaternalId.Value, 
                             token).ConfigureAwait(false);
                             
                     var expressedGenotypes = siblingGenotypes
@@ -125,9 +125,9 @@ namespace Momentum.Genetics.Heredity
                     
                     var otherParentId = siblings.Any(x => individual.Id.Equals(x.PaternalId)) ? siblings.First().MaternalId : siblings.First().PaternalId;
                     IEnumerable<Genotype<TAllele, TLocus>> otherParentGenotypes = null;
-                    if(otherParentId != null)
+                    if(otherParentId.HasValue)
                     {
-                        var otherParentGenotype = await _genotypeRepository.GetAsync(otherParentId, token).ConfigureAwait(false);
+                        var otherParentGenotype = await _genotypeRepository.GetAsync(otherParentId.Value, token).ConfigureAwait(false);
                         otherParentGenotypes = otherParentGenotype.BuildPotentialGenotypes();
                     }
                     else
