@@ -10,17 +10,17 @@ namespace Momentum.Genetics.Heredity.Tests
     {
         private Mock<IIndividualRepository<Guid>> _individualRepo;
         private Mock<IGenotypeRepository<ExtensionAllele, ExtensionLocus, Guid>> _genotypeRepo;
-        private Mock<ILogger<GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid>>> _logger;
+        private Mock<ILogger<GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid, IIndividualRepository<Guid>>>> _logger;
         private Mock<ILogger<PunnetSquare<ExtensionAllele, ExtensionLocus>>> _punnetLogger;
-        private GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid> _calculator;
+        private GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid, IIndividualRepository<Guid>> _calculator;
 
         public ExtensionGenotypeCalculatorTests()
         {
             _individualRepo = new Mock<IIndividualRepository<Guid>>();
             _genotypeRepo = new Mock<IGenotypeRepository<ExtensionAllele, ExtensionLocus, Guid>>();
-            _logger = new Mock<ILogger<GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid>>>();
+            _logger = new Mock<ILogger<GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid, IIndividualRepository<Guid>>>>();
             _punnetLogger = new Mock<ILogger<PunnetSquare<ExtensionAllele, ExtensionLocus>>>();
-            _calculator = new GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid>(
+            _calculator = new GenotypeCalculator<ExtensionAllele, ExtensionLocus, Guid, IIndividualRepository<Guid>>(
                 _individualRepo.Object,
                 _genotypeRepo.Object, 
                 new PunnetSquare<ExtensionAllele, ExtensionLocus>(_punnetLogger.Object),

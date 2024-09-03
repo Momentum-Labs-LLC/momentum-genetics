@@ -6,21 +6,22 @@ using Momentum.Genetics.Models;
 
 namespace Momentum.Genetics.Heredity
 {
-    public class GenotypeCalculator<TAllele, TLocus, TId> : IGenotypeCalculator<TAllele, TLocus, TId>
+    public class GenotypeCalculator<TAllele, TLocus, TId, TIndividualRepository> : IGenotypeCalculator<TAllele, TLocus, TId>
         where TAllele : Allele
         where TLocus : Locus<TAllele>, new()
         where TId : struct, IEquatable<TId>
+        where TIndividualRepository : IIndividualRepository<TId>
     {
-        protected readonly IIndividualRepository<TId> _individualRepository;
+        protected readonly TIndividualRepository _individualRepository;
         protected readonly IGenotypeRepository<TAllele, TLocus, TId> _genotypeRepository;
         protected readonly IPunnetSquare<TAllele, TLocus> _punnetSquare;
         protected readonly ILogger _logger;
 
         public GenotypeCalculator(
-            IIndividualRepository<TId> individualRepository,
+            TIndividualRepository individualRepository,
             IGenotypeRepository<TAllele, TLocus, TId> genotypeRepository,
             IPunnetSquare<TAllele, TLocus> punnetSquare,
-            ILogger<GenotypeCalculator<TAllele, TLocus, TId>> logger)
+            ILogger<GenotypeCalculator<TAllele, TLocus, TId, TIndividualRepository>> logger)
         {
             _individualRepository = individualRepository ?? throw new ArgumentNullException(nameof(individualRepository));
             _genotypeRepository = genotypeRepository ?? throw new ArgumentNullException(nameof(genotypeRepository));

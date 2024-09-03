@@ -10,17 +10,17 @@ namespace Momentum.Genetics.Heredity.Tests
     {
         private Mock<IIndividualRepository<Guid>> _individualRepo;
         private Mock<IGenotypeRepository<TestAllele, TestLocus, Guid>> _genotypeRepo;
-        private Mock<ILogger<GenotypeCalculator<TestAllele, TestLocus, Guid>>> _logger;
+        private Mock<ILogger<GenotypeCalculator<TestAllele, TestLocus, Guid, IIndividualRepository<Guid>>>> _logger;
         private Mock<ILogger<PunnetSquare<TestAllele, TestLocus>>> _punnetLogger;
-        private GenotypeCalculator<TestAllele, TestLocus, Guid> _calculator;
+        private GenotypeCalculator<TestAllele, TestLocus, Guid, IIndividualRepository<Guid>> _calculator;
 
         public GenotypeCalculatorTests()
         {
             _individualRepo = new Mock<IIndividualRepository<Guid>>();
             _genotypeRepo = new Mock<IGenotypeRepository<TestAllele, TestLocus, Guid>>();
-            _logger = new Mock<ILogger<GenotypeCalculator<TestAllele, TestLocus, Guid>>>();
+            _logger = new Mock<ILogger<GenotypeCalculator<TestAllele, TestLocus, Guid, IIndividualRepository<Guid>>>>();
             _punnetLogger = new Mock<ILogger<PunnetSquare<TestAllele, TestLocus>>>();
-            _calculator = new GenotypeCalculator<TestAllele, TestLocus, Guid>(
+            _calculator = new GenotypeCalculator<TestAllele, TestLocus, Guid, IIndividualRepository<Guid>>(
                 _individualRepo.Object,
                 _genotypeRepo.Object,
                 new PunnetSquare<TestAllele, TestLocus>(_punnetLogger.Object),
