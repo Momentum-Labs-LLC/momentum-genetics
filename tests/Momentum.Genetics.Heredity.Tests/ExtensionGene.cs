@@ -6,21 +6,20 @@ using Momentum.Genetics.Models;
 
 namespace Momentum.Genetics.Heredity.Tests
 {
-    public class ExtensionLocus : Locus<ExtensionAllele>
+    public class ExtensionLocus : Locus
     {        
         public ExtensionLocus()
         {
             this.Id = Guid.NewGuid();
             this.Symbol = "E";
-        }
-
-        public override IEnumerable<ExtensionAllele> Alleles => new List<ExtensionAllele>()
+            this.Alleles = new List<ExtensionAllele>()
             {
                 ExtensionAllele.Steel,
                 ExtensionAllele.Normal,
                 ExtensionAllele.Harlequin,
                 ExtensionAllele.NonExtension
             };
+        }
     } // end class
 
     public class ExtensionAllele : Allele

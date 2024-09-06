@@ -23,21 +23,19 @@ namespace Momentum.Genetics.Heredity.Tests
         } // end method
     } // end method
 
-    public class TestLocus : Locus<TestAllele>
-    {
-        
+    public class TestLocus : Locus
+    {        
         public TestLocus() 
         {
             this.Symbol = "A";
             this.Name = "Test";
             this.Description = "test";
-        } // end method
-
-        public override IEnumerable<TestAllele> Alleles => new List<TestAllele>()
-        {
-            TestAllele.Agouti,
-            TestAllele.Tan,
-            TestAllele.Self
-        };
+            this.Alleles = new List<TestAllele>() 
+            {
+                TestAllele.Agouti,
+                TestAllele.Tan,
+                TestAllele.Self
+            };
+        } // end method        
     } // end class
 }

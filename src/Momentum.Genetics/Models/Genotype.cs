@@ -1,24 +1,32 @@
 using System.Text;
+using Momentum.Genetics.Interfaces;
 
 namespace Momentum.Genetics.Models
 {
     /// <summary>
     /// A pair of alleles located at a specific locus.
     /// </summary>
-    /// <typeparam name="TLocus"></typeparam>
-    public class Genotype<TAllele, TLocus>
-        where TAllele : Allele
-        where TLocus : Locus<TAllele>, new()
+    public class Genotype : IGenotype
     {
+        /// <summary>
+        /// Gets or sets the identifier.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the locus identifier.
+        /// </summary>
+        public Guid LocusId { get; set; }
+
         /// <summary>
         /// Gets or sets the more dominant allele.
         /// </summary>
-        public TAllele? DominantAllele { get; set; }
+        public Allele DominantAllele { get; set; }
 
         /// <summary>
         /// Gets or sets the less dominant allele. Can be the same as the first allele, different, or unknown.
         /// </summary>
-        public TAllele? OtherAllele { get; set; }
+        public Allele? OtherAllele { get; set; }
 
         public bool? IsHomozygous 
         { 
@@ -37,7 +45,7 @@ namespace Momentum.Genetics.Models
 
         public Genotype() { } // end method
 
-        public Genotype(TAllele firstAllele, TAllele? secondAllele = null)
+        public Genotype(Allele firstAllele, Allele? secondAllele = null)
         {
             if(firstAllele == null)
             {

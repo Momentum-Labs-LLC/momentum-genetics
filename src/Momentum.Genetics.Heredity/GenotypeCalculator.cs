@@ -1,40 +1,45 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Momentum.Genetics.Extensions;
 using Momentum.Genetics.Heredity.Interfaces;
 using Momentum.Genetics.Heredity.Models;
+using Momentum.Genetics.Interfaces;
 using Momentum.Genetics.Models;
 
 namespace Momentum.Genetics.Heredity
 {
-    public class GenotypeCalculator<TAllele, TLocus, TId, TIndividualRepository> : IGenotypeCalculator<TAllele, TLocus, TId>
-        where TAllele : Allele
-        where TLocus : Locus<TAllele>, new()
+    public class GenotypeCalculator<TId, TIndividual, TIndividualRepository, TGenotypeRepository> : IGenotypeCalculator<TId>
         where TId : struct, IEquatable<TId>
-        where TIndividualRepository : IIndividualRepository<TId>
+        where TIndividual : IIndividual<TId>
+        where TIndividualRepository : IIndividualRepository<TId, TIndividual>
+        where TGenotypeRepository : IGenotypeRepository<TId>
     {
         protected readonly TIndividualRepository _individualRepository;
-        protected readonly IGenotypeRepository<TAllele, TLocus, TId> _genotypeRepository;
-        protected readonly IPunnetSquare<TAllele, TLocus> _punnetSquare;
+        protected readonly TGenotypeRepository _genotypeRepository;
+        protected readonly IAlleleRepository _alleleRepository;
+        protected readonly IPunnetSquare _punnetSquare;
         protected readonly ILogger _logger;
 
         public GenotypeCalculator(
             TIndividualRepository individualRepository,
-            IGenotypeRepository<TAllele, TLocus, TId> genotypeRepository,
-            IPunnetSquare<TAllele, TLocus> punnetSquare,
-            ILogger<GenotypeCalculator<TAllele, TLocus, TId, TIndividualRepository>> logger)
+            TGenotypeRepository genotypeRepository,
+            IAlleleRepository alleleRepository,
+            IPunnetSquare punnetSquare,
+            ILogger<GenotypeCalculator<TId, TIndividual, TIndividualRepository, TGenotypeRepository>> logger)
         {
             _individualRepository = individualRepository ?? throw new ArgumentNullException(nameof(individualRepository));
             _genotypeRepository = genotypeRepository ?? throw new ArgumentNullException(nameof(genotypeRepository));
+            _alleleRepository = alleleRepository ?? throw new ArgumentNullException(nameof(alleleRepository));
             _punnetSquare = punnetSquare ?? throw new ArgumentNullException(nameof(punnetSquare));            
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         } // end method
 
-        public virtual async Task<IEnumerable<Genotype<TAllele, TLocus>>> CalculateGenotypesAsync(TId individualId, CancellationToken token = default)
+        public virtual async Task<IEnumerable<IGenotype>> CalculateGenotypesAsync(TId individualId, Guid locusId, CancellationToken token = default)
         {
-            var result = new List<Genotype<TAllele, TLocus>>();
+            var result = new List<IGenotype>();
 
             var individual = await _individualRepository.GetAsync(individualId, token).ConfigureAwait(false);
-            var genotype = await _genotypeRepository.GetAsync(individualId, token).ConfigureAwait(false);
+            var genotype = await _genotypeRepository.GetAsync(individualId, locusId, token).ConfigureAwait(false);
             
             if(genotype.DominantAllele == null 
                 || genotype.OtherAllele == null)
@@ -48,7 +53,8 @@ namespace Momentum.Genetics.Heredity
                     // then go against children and the fellow parent of those children.
                     var applicableGenotypesFromChildren = await GetApplicableGenotypesFromOffspringAsync(
                             individual, 
-                            potentialGenotypes,
+                            locusId,
+                            potentialGenotypes,    
                             token)
                         .ConfigureAwait(false);
 
@@ -67,25 +73,25 @@ namespace Momentum.Genetics.Heredity
             return result;
         } // end method
 
-        protected virtual async Task<IEnumerable<GenotypeRatio<TAllele, TLocus>>> GetPotentialGenotypesFromParentsAsync(
-            Individual<TId> individual,
-            Genotype<TAllele, TLocus> individualGenotype,
+        protected virtual async Task<IEnumerable<GenotypeCount>> GetPotentialGenotypesFromParentsAsync(
+            TIndividual individual,
+            IGenotype individualGenotype,
             CancellationToken token = default)
         {
-            var paternalGenotype = new Genotype<TAllele, TLocus>();
-            var materalGenotype = new Genotype<TAllele, TLocus>();
+            IGenotype paternalGenotype = new Genotype() { LocusId = individualGenotype.LocusId };
+            IGenotype materalGenotype = new Genotype() { LocusId = individualGenotype.LocusId };
             
             if(individual.PaternalId.HasValue)
             {
-                paternalGenotype = await _genotypeRepository.GetAsync(individual.PaternalId.Value, token).ConfigureAwait(false);
+                paternalGenotype = await _genotypeRepository.GetAsync(individual.PaternalId.Value, individualGenotype.LocusId, token).ConfigureAwait(false);
             } // end if
             
             if(individual.MaternalId.HasValue)
             {
-                materalGenotype = await _genotypeRepository.GetAsync(individual.MaternalId.Value, token).ConfigureAwait(false);
+                materalGenotype = await _genotypeRepository.GetAsync(individual.MaternalId.Value, individualGenotype.LocusId, token).ConfigureAwait(false);
             } // end if
 
-            var results = _punnetSquare.GetOffsprinGenotypes(paternalGenotype, materalGenotype);
+            var results = await _punnetSquare.GetOffsprinGenotypesAsync(paternalGenotype, materalGenotype, token).ConfigureAwait(false);
             if(individualGenotype.DominantAllele != null)
             {
                 results = results.Where(x => x.Genotype.DominantAllele.Ordinal == individualGenotype.DominantAllele.Ordinal);
@@ -94,12 +100,17 @@ namespace Momentum.Genetics.Heredity
             return results;
         } // end method
     
-        protected virtual async Task<IEnumerable<Genotype<TAllele, TLocus>>> GetApplicableGenotypesFromOffspringAsync(
-            Individual<TId> individual,
-            IEnumerable<Genotype<TAllele, TLocus>> potentialGenotypes,
+        protected virtual async Task<IEnumerable<IGenotype>> GetApplicableGenotypesFromOffspringAsync(
+            TIndividual individual,
+            Guid locusId,
+            IEnumerable<IGenotype> potentialGenotypes,
             CancellationToken token = default)
         {
             var result = potentialGenotypes.ToList();
+
+            // get all alleles belonging to the locus
+            var alleles = await _alleleRepository.GetByLocusAsync(locusId, token).ConfigureAwait(false);
+
             // Get all the offspring of the individual
             var allOffspring = await _individualRepository.GetOffspringAsync(individual.Id, token).ConfigureAwait(false);
 
@@ -115,6 +126,7 @@ namespace Momentum.Genetics.Heredity
                     var siblingGenotypes = await _genotypeRepository.GetOffspringGenotypesAsync(
                             siblings.Key.PaternalId.Value, 
                             siblings.Key.MaternalId.Value, 
+                            locusId,
                             token).ConfigureAwait(false);
                             
                     var expressedGenotypes = siblingGenotypes
@@ -125,24 +137,24 @@ namespace Momentum.Genetics.Heredity
                         .ToList();
                     
                     var otherParentId = siblings.Any(x => individual.Id.Equals(x.PaternalId)) ? siblings.First().MaternalId : siblings.First().PaternalId;
-                    IEnumerable<Genotype<TAllele, TLocus>> otherParentGenotypes = null;
+                    IEnumerable<IGenotype> otherParentGenotypes = null;
                     if(otherParentId.HasValue)
                     {
-                        var otherParentGenotype = await _genotypeRepository.GetAsync(otherParentId.Value, token).ConfigureAwait(false);
-                        otherParentGenotypes = otherParentGenotype.BuildPotentialGenotypes();
+                        var otherParentGenotype = await _genotypeRepository.GetAsync(otherParentId.Value, locusId, token).ConfigureAwait(false);                        
+                        otherParentGenotypes = otherParentGenotype.BuildPotentialGenotypes(alleles);
                     }
                     else
                     {
-                        otherParentGenotypes = new Genotype<TAllele, TLocus>().BuildPotentialGenotypes();
+                        otherParentGenotypes = new Genotype().BuildPotentialGenotypes(alleles);
                     } // end if
 
                     if(otherParentGenotypes.Count() > 1)
                     {
                         // restrict the other parent genotypes to ones that could actually help produce the expressed genotypes
-                        otherParentGenotypes = RefinePotentialGenotypes(expressedGenotypes, otherParentGenotypes, result);
+                        otherParentGenotypes = await RefinePotentialGenotypesAsync(expressedGenotypes, otherParentGenotypes, result, token).ConfigureAwait(false);
                     } // end if
 
-                    var refinedPotentialGenotypes = RefinePotentialGenotypes(expressedGenotypes, result, otherParentGenotypes);
+                    var refinedPotentialGenotypes = await RefinePotentialGenotypesAsync(expressedGenotypes, result, otherParentGenotypes, token).ConfigureAwait(false);
 
                     result = refinedPotentialGenotypes.ToList();
                 } // end foreach
@@ -151,10 +163,11 @@ namespace Momentum.Genetics.Heredity
             return result;
         } // end method
 
-        protected virtual IEnumerable<Genotype<TAllele, TLocus>> RefinePotentialGenotypes(
-            IEnumerable<Genotype<TAllele, TLocus>> expressedGenotypes,
-            IEnumerable<Genotype<TAllele, TLocus>> parentGenotypes,
-            IEnumerable<Genotype<TAllele, TLocus>> otherParentGenotypes)
+        protected virtual async Task<IEnumerable<IGenotype>> RefinePotentialGenotypesAsync(
+            IEnumerable<IGenotype> expressedGenotypes,
+            IEnumerable<IGenotype> parentGenotypes,
+            IEnumerable<IGenotype> otherParentGenotypes,
+            CancellationToken token = default)
         {
             var result = parentGenotypes.ToList();
 
@@ -163,15 +176,13 @@ namespace Momentum.Genetics.Heredity
                 // the potential genotypes
                 potentialGenotype => potentialGenotype, 
                 // the genotypes than can come from this potential genotype
-                potentialGenotype => otherParentGenotypes.SelectMany(otherParentGenotype => 
-                        _punnetSquare.GetOffsprinGenotypes(potentialGenotype, otherParentGenotype)
-                            .Select(x => x.Genotype)));
+                async potentialGenotype => await BuildOffspringGenotypes(potentialGenotype, otherParentGenotypes, token).ConfigureAwait(false));
 
             // now remove any potential genotypes that did not produce genotypes that explain all the expressions
             foreach(var potentialGenotypeOffspringKvp in potentialGenotypeOffspring)
             {
                 var allExpressedGenotypesRepresented = expressedGenotypes.All(expressedGenotype => 
-                    potentialGenotypeOffspringKvp.Value.Any(genotype => 
+                    potentialGenotypeOffspringKvp.Value.Result.Any(genotype => 
                         genotype.DominantAllele.Ordinal == expressedGenotype.DominantAllele.Ordinal
                         && (expressedGenotype.OtherAllele == null || genotype.OtherAllele.Ordinal == expressedGenotype.OtherAllele.Ordinal)));
 
@@ -182,6 +193,53 @@ namespace Momentum.Genetics.Heredity
             } // end foreach
 
             return result;
+        } // end method
+
+        protected async Task<IEnumerable<IGenotype>> BuildOffspringGenotypes(
+            IGenotype firstParentGenotype, 
+            IEnumerable<IGenotype> otherParentGenotypes, 
+            CancellationToken token = default)
+        {
+            var result = new ConcurrentBag<IGenotype>();
+            await Parallel.ForEachAsync(otherParentGenotypes, token, async (otherParentGenotype, token) => {
+                var offspringGenotypes = await _punnetSquare.GetOffsprinGenotypesAsync(firstParentGenotype, otherParentGenotype, token).ConfigureAwait(false);
+                offspringGenotypes.ToList().ForEach(x => result.Add(x.Genotype));
+            }).ConfigureAwait(false);
+
+            return result;
+        } // end method
+    } // end class
+
+    public class GenotypeCalculator<TIndividual, TIndividualRepository, TGenotypeRepository> :
+            GenotypeCalculator<Guid, TIndividual, TIndividualRepository, TGenotypeRepository>,
+            IGenotypeCalculator<Guid>
+        where TIndividual : IIndividual<Guid>
+        where TIndividualRepository : IIndividualRepository<Guid, TIndividual>
+        where TGenotypeRepository : IGenotypeRepository<Guid>
+    {
+        public GenotypeCalculator(
+                TIndividualRepository individualRepository, 
+                TGenotypeRepository genotypeRepository, 
+                IAlleleRepository alleleRepository,
+                IPunnetSquare punnetSquare, 
+                ILogger<GenotypeCalculator<TIndividual, TIndividualRepository, TGenotypeRepository>> logger) 
+            : base(individualRepository, genotypeRepository, alleleRepository, punnetSquare, logger)
+        {
+        } // end method
+    } // end method
+
+    public class GenotypeCalculator :
+            GenotypeCalculator<IIndividual, IIndividualRepository, IGenotypeRepository>,
+            IGenotypeCalculator
+    {
+        public GenotypeCalculator(
+                IIndividualRepository individualRepository, 
+                IGenotypeRepository genotypeRepository, 
+                IAlleleRepository alleleRepository,
+                IPunnetSquare punnetSquare, 
+                ILogger<GenotypeCalculator> logger) 
+            : base(individualRepository, genotypeRepository, alleleRepository, punnetSquare, logger)
+        {
         } // end method
     } // end class
 } // end namespace

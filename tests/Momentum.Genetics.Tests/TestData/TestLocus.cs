@@ -3,7 +3,7 @@ using Momentum.Genetics.Models;
 namespace Momentum.Genetics.TestData
 {
     public class TestAllele : Allele {}
-    public class TestLocus : Locus<TestAllele>
+    public class TestLocus : Locus
     {
         
         public TestLocus() 
@@ -11,13 +11,12 @@ namespace Momentum.Genetics.TestData
             this.Symbol = "A";
             this.Name = "Test";
             this.Description = "test";
+            this.Alleles = new List<TestAllele>()
+            {
+                new FirstAllele(),
+                new SecondAllele(),
+                new ThirdAllele()
+            };
         } // end method
-
-        public override IEnumerable<TestAllele> Alleles => new List<TestAllele>()
-        {
-            new FirstAllele(),
-            new SecondAllele(),
-            new ThirdAllele()
-        };
     } // end class
 } // end namespace

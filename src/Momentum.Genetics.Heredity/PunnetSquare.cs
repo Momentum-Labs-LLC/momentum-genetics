@@ -3,31 +3,32 @@ using Momentum.Genetics.Models;
 using Microsoft.Extensions.Logging;
 using Momentum.Genetics.Extensions;
 using Momentum.Genetics.Heredity.Models;
+using Momentum.Genetics.Interfaces;
 
 namespace Momentum.Genetics.Heredity
 {
-    public class PunnetSquare<TAllele, TLocus> : IPunnetSquare<TAllele, TLocus>
-        where TAllele : Allele
-        where TLocus : Locus<TAllele>, new()
+    public class PunnetSquare : IPunnetSquare
     {
-        protected static readonly TLocus _locus = new TLocus();
+        protected readonly IAlleleRepository _alleleRepository;
         protected readonly ILogger _logger;
 
-        public PunnetSquare(ILogger<PunnetSquare<TAllele, TLocus>> logger)
+        public PunnetSquare(IAlleleRepository alleleRepository, ILogger<PunnetSquare> logger)
         {
+            _alleleRepository = alleleRepository ?? throw new ArgumentNullException(nameof(alleleRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         } // end method
 
-        public virtual IEnumerable<GenotypeRatio<TAllele, TLocus>> GetOffsprinGenotypes(
-            Genotype<TAllele, TLocus> paternalGenotype, 
-            Genotype<TAllele, TLocus> maternalGenotype)
+        public virtual async Task<IEnumerable<GenotypeCount>> GetOffsprinGenotypesAsync(
+            IGenotype paternalGenotype, 
+            IGenotype maternalGenotype,
+            CancellationToken token = default)
         {
-            var paternalAlleles = BuildAlleleSets(paternalGenotype);
-            var maternalAlleles = BuildAlleleSets(maternalGenotype);
+            var paternalAlleles = await BuildAlleleSetsAsync(paternalGenotype, token).ConfigureAwait(false);
+            var maternalAlleles = await BuildAlleleSetsAsync(maternalGenotype, token).ConfigureAwait(false);;
 
             var potentials = CombineAlleleSets(paternalAlleles, maternalAlleles);            
 
-            var genotypeRatios = BuildGenotypeRatios(potentials);
+            var genotypeRatios = BuildGenotypeCounts(potentials);
 
             return genotypeRatios;
         } // end method
@@ -38,9 +39,10 @@ namespace Momentum.Genetics.Heredity
         /// </summary>
         /// <param name="potentialGenotypes"></param>
         /// <returns></returns>
-        protected Dictionary<TAllele, List<TAllele>> BuildAlleleSets(Genotype<TAllele, TLocus> genoType)
+        protected async Task<Dictionary<Allele, List<Allele>>> BuildAlleleSetsAsync(IGenotype genoType, CancellationToken token = default)
         {
-            var potentialGenotypes = genoType.BuildPotentialGenotypes();
+            var alleles = await _alleleRepository.GetByLocusAsync(genoType.LocusId, token).ConfigureAwait(false);
+            var potentialGenotypes = genoType.BuildPotentialGenotypes(alleles);
             return potentialGenotypes
                 .GroupBy(x => x.DominantAllele.Ordinal)
                 .ToDictionary(group => 
@@ -54,11 +56,11 @@ namespace Momentum.Genetics.Heredity
         /// <param name="paternalAlleles"></param>
         /// <param name="maternalAlleles"></param>
         /// <returns></returns>
-        protected IEnumerable<Genotype<TAllele, TLocus>> CombineAlleleSets(
-            Dictionary<TAllele, List<TAllele>> paternalAlleles, 
-            Dictionary<TAllele, List<TAllele>> maternalAlleles)
+        protected IEnumerable<IGenotype> CombineAlleleSets(
+            Dictionary<Allele, List<Allele>> paternalAlleles, 
+            Dictionary<Allele, List<Allele>> maternalAlleles)
         {
-            var results = new List<Genotype<TAllele, TLocus>>();
+            var results = new List<Genotype>();
             foreach(var paternalKvp in paternalAlleles)
             {
                 foreach(var paternalOther in paternalKvp.Value)
@@ -67,10 +69,10 @@ namespace Momentum.Genetics.Heredity
                     {
                         foreach(var maternalOther in maternalKvp.Value)
                         {
-                            results.Add(new Genotype<TAllele, TLocus>(paternalKvp.Key, maternalKvp.Key));
-                            results.Add(new Genotype<TAllele, TLocus>(paternalOther, maternalKvp.Key));
-                            results.Add(new Genotype<TAllele, TLocus>(maternalOther, paternalKvp.Key));
-                            results.Add(new Genotype<TAllele, TLocus>(maternalOther, paternalOther));
+                            results.Add(new Genotype(paternalKvp.Key, maternalKvp.Key));
+                            results.Add(new Genotype(paternalOther, maternalKvp.Key));
+                            results.Add(new Genotype(maternalOther, paternalKvp.Key));
+                            results.Add(new Genotype(maternalOther, paternalOther));
                         } // end foreach
                     } // end foreach         
                 } // end foreach                
@@ -84,14 +86,14 @@ namespace Momentum.Genetics.Heredity
         /// </summary>
         /// <param name="genotypes"></param>
         /// <returns></returns>
-        protected IEnumerable<GenotypeRatio<TAllele, TLocus>> BuildGenotypeRatios(IEnumerable<Genotype<TAllele, TLocus>> genotypes)
+        protected IEnumerable<GenotypeCount> BuildGenotypeCounts(IEnumerable<IGenotype> genotypes)
         {
             return genotypes
                 .GroupBy(x => x.ToString())
-                .Select(x => new GenotypeRatio<TAllele, TLocus>() 
+                .Select(x => new GenotypeCount() 
                     { 
                         Genotype = x.First(),
-                        Ratio = (float)x.Count() / (float)genotypes.Count()
+                        Count = x.Count()
                     })
                 .ToList();
         } // end method

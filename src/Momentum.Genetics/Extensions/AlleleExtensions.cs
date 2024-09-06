@@ -1,19 +1,19 @@
+using Momentum.Genetics.Interfaces;
 using Momentum.Genetics.Models;
 
 namespace Momentum.Genetics.Extensions
 {
     public static class AlleleExtensions
     {
-        public static Genotype<TAllele, TLocus> BuildGenotype<TAllele, TLocus>(
-                this TAllele allele,
-                TAllele? other = null)
-            where TAllele : Allele
-            where TLocus : Locus<TAllele>, new()
+        public static IGenotype BuildGenotype(
+                this Allele allele,
+                Guid locusId,
+                Allele? other = null)
         {
-            Genotype<TAllele, TLocus> result = new Genotype<TAllele, TLocus>(allele, other);
+            IGenotype result = new Genotype(allele, other) { LocusId = locusId};
             if (other == null && allele.Dominance == DominanceEnum.Recessive)
             {
-                result = new Genotype<TAllele, TLocus>(allele, allele);
+                result = new Genotype(allele, allele) { LocusId = locusId};
             } // end if
             return result;
         } // end method

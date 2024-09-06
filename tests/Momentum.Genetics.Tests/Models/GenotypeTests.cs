@@ -9,7 +9,7 @@ namespace Momentum.Genetics.Tests.Models
         [Fact]
         public void Empty_Constructor()
         {
-            var genotype = new Genotype<TestAllele, TestLocus>();
+            var genotype = new Genotype();
             Assert.Null(genotype.DominantAllele);
             Assert.Null(genotype.OtherAllele);
             Assert.Null(genotype.IsHomozygous);
@@ -18,7 +18,7 @@ namespace Momentum.Genetics.Tests.Models
         [Fact]
         public void Constructor_Only_DominantProvided()
         {
-            var genotype = new Genotype<TestAllele, TestLocus>(new SecondAllele());
+            var genotype = new Genotype(new SecondAllele());
             Assert.NotNull(genotype.DominantAllele);
             Assert.Null(genotype.OtherAllele);
             Assert.Null(genotype.IsHomozygous);
@@ -27,7 +27,7 @@ namespace Momentum.Genetics.Tests.Models
         [Fact]
         public void Constructor_Homozygous()
         {
-            var genotype = new Genotype<TestAllele, TestLocus>(new SecondAllele(), new SecondAllele());
+            var genotype = new Genotype(new SecondAllele(), new SecondAllele());
             Assert.NotNull(genotype.DominantAllele);
             Assert.NotNull(genotype.OtherAllele);
             Assert.True(genotype.IsHomozygous);
@@ -36,7 +36,7 @@ namespace Momentum.Genetics.Tests.Models
         [Fact]
         public void Constructor_Heterozygous()
         {
-            var genotype = new Genotype<TestAllele, TestLocus>(new SecondAllele(), new ThirdAllele());
+            var genotype = new Genotype(new SecondAllele(), new ThirdAllele());
             Assert.NotNull(genotype.DominantAllele);
             Assert.NotNull(genotype.OtherAllele);
             Assert.False(genotype.IsHomozygous);
@@ -47,7 +47,7 @@ namespace Momentum.Genetics.Tests.Models
         {
             var secondAllele = new SecondAllele();
             var firstAllele = new FirstAllele();
-            var genotype = new Genotype<TestAllele, TestLocus>(secondAllele, firstAllele);
+            var genotype = new Genotype(secondAllele, firstAllele);
             Assert.Equal(firstAllele, genotype.DominantAllele);
             Assert.Equal(secondAllele, genotype.OtherAllele);
         } // end method
@@ -56,7 +56,7 @@ namespace Momentum.Genetics.Tests.Models
         public void Null_Null_ToString()
         {
             var expected = "_/_";
-            var genotype = new Genotype<TestAllele, TestLocus>();
+            var genotype = new Genotype();
             var genotypeString = genotype.ToString();
             Assert.Equal(expected, genotypeString);
         } // end method
@@ -65,7 +65,7 @@ namespace Momentum.Genetics.Tests.Models
         public void First_Null_ToString()
         {
             var expected = "A/_";
-            var genotype = new Genotype<TestAllele, TestLocus>()
+            var genotype = new Genotype()
             {
                 DominantAllele = new FirstAllele()
             };
@@ -77,7 +77,7 @@ namespace Momentum.Genetics.Tests.Models
         public void First_Second_ToString()
         {
             var expected = "A/a(t)";
-            var genotype = new Genotype<TestAllele, TestLocus>(new FirstAllele(), new SecondAllele());
+            var genotype = new Genotype(new FirstAllele(), new SecondAllele());
             var genotypeString = genotype.ToString();
             Assert.Equal(expected, genotypeString);
         } // end method

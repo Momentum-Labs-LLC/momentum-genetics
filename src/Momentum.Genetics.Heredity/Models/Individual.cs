@@ -1,9 +1,11 @@
+using Momentum.Genetics.Heredity.Interfaces;
+
 namespace Momentum.Genetics.Heredity.Models
 {
     /// <summary>
     /// This class represents an individual member of any given species.
     /// </summary>
-    public class Individual<TId>
+    public class Individual<TId> : IIndividual<TId>
         where TId : struct
     {
         /// <summary>
@@ -22,7 +24,7 @@ namespace Momentum.Genetics.Heredity.Models
         public Nullable<TId> MaternalId { get; set; }
     } // end class
 
-    public class Individual : Individual<Guid> 
+    public class Individual : Individual<Guid>, IIndividual
     { 
         public Individual()
         {

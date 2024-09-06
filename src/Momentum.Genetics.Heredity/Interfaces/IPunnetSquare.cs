@@ -1,14 +1,13 @@
 using Momentum.Genetics.Heredity.Models;
-using Momentum.Genetics.Models;
+using Momentum.Genetics.Interfaces;
 
 namespace Momentum.Genetics.Heredity.Interfaces
 {
-    public interface IPunnetSquare<TAllele, TLocus>
-        where TAllele : Allele
-        where TLocus : Locus<TAllele>, new()
+    public interface IPunnetSquare
     {
-        IEnumerable<GenotypeRatio<TAllele, TLocus>> GetOffsprinGenotypes(
-            Genotype<TAllele, TLocus> paternalGenotype, 
-            Genotype<TAllele, TLocus> maternalGenotype);
+        Task<IEnumerable<GenotypeCount>> GetOffsprinGenotypesAsync(
+            IGenotype paternalGenotype, 
+            IGenotype maternalGenotype,
+            CancellationToken token = default);
     } // end interface
 } // end namespace

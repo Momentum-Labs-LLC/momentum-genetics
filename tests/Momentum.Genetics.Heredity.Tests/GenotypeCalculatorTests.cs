@@ -3,27 +3,32 @@ using Momentum.Genetics.Models;
 using Microsoft.Extensions.Logging;
 using Momentum.Genetics.Heredity.Models;
 using Momentum.Genetics.Extensions;
+using Momentum.Genetics.Interfaces;
 
 namespace Momentum.Genetics.Heredity.Tests
 {
     public class GenotypeCalculatorTests
     {
-        private Mock<IIndividualRepository<Guid>> _individualRepo;
-        private Mock<IGenotypeRepository<TestAllele, TestLocus, Guid>> _genotypeRepo;
-        private Mock<ILogger<GenotypeCalculator<TestAllele, TestLocus, Guid, IIndividualRepository<Guid>>>> _logger;
-        private Mock<ILogger<PunnetSquare<TestAllele, TestLocus>>> _punnetLogger;
-        private GenotypeCalculator<TestAllele, TestLocus, Guid, IIndividualRepository<Guid>> _calculator;
+        private Guid _locusId = Guid.NewGuid();
+        private Mock<IIndividualRepository> _individualRepo;
+        private Mock<IGenotypeRepository> _genotypeRepo;
+        private Mock<IAlleleRepository> _alleleRepo;
+        private Mock<ILogger<GenotypeCalculator>> _logger;
+        private Mock<ILogger<PunnetSquare>> _punnetLogger;
+        private GenotypeCalculator _calculator;
 
         public GenotypeCalculatorTests()
         {
-            _individualRepo = new Mock<IIndividualRepository<Guid>>();
-            _genotypeRepo = new Mock<IGenotypeRepository<TestAllele, TestLocus, Guid>>();
-            _logger = new Mock<ILogger<GenotypeCalculator<TestAllele, TestLocus, Guid, IIndividualRepository<Guid>>>>();
-            _punnetLogger = new Mock<ILogger<PunnetSquare<TestAllele, TestLocus>>>();
-            _calculator = new GenotypeCalculator<TestAllele, TestLocus, Guid, IIndividualRepository<Guid>>(
+            _individualRepo = new Mock<IIndividualRepository>();
+            _genotypeRepo = new Mock<IGenotypeRepository>();
+            _alleleRepo = new Mock<IAlleleRepository>();
+            _logger = new Mock<ILogger<GenotypeCalculator>>();
+            _punnetLogger = new Mock<ILogger<PunnetSquare>>();
+            _calculator = new GenotypeCalculator(
                 _individualRepo.Object,
                 _genotypeRepo.Object,
-                new PunnetSquare<TestAllele, TestLocus>(_punnetLogger.Object),
+                _alleleRepo.Object,
+                new PunnetSquare(_alleleRepo.Object, _punnetLogger.Object),
                 _logger.Object
             );
         } // end method
@@ -32,31 +37,39 @@ namespace Momentum.Genetics.Heredity.Tests
         public async Task Where_Did_Tan_Come_From()
         {
             var individual = new Individual();
-            var individualGenotype = new Genotype<TestAllele, TestLocus>();
+            var individualGenotype = new Genotype() { LocusId = _locusId };
 
             var otherParent = new Individual();
-            var otherParentGeno = TestAllele.Agouti.BuildGenotype<TestAllele, TestLocus>();
+            var otherParentGeno = TestAllele.Agouti.BuildGenotype(_locusId);
 
-            var offspring = new Dictionary<Individual, Genotype<TestAllele, TestLocus>>()
+            var offspring = new Dictionary<Individual, IGenotype>()
             {
-                { new Individual(individual, otherParent), TestAllele.Agouti.BuildGenotype<TestAllele, TestLocus>() },
-                { new Individual(individual, otherParent), TestAllele.Tan.BuildGenotype<TestAllele, TestLocus>() },
-                { new Individual(individual, otherParent), TestAllele.Self.BuildGenotype<TestAllele, TestLocus>() },
+                { new Individual(individual, otherParent), TestAllele.Agouti.BuildGenotype(_locusId) },
+                { new Individual(individual, otherParent), TestAllele.Tan.BuildGenotype(_locusId) },
+                { new Individual(individual, otherParent), TestAllele.Self.BuildGenotype(_locusId) },
             };
+
+            _alleleRepo.Setup(x => x.GetByLocusAsync(_locusId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Allele>() 
+                { 
+                    TestAllele.Agouti,
+                    TestAllele.Tan,
+                    TestAllele.Self
+                });
 
             _individualRepo.Setup(x => x.GetAsync(individual.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(individual);
             _individualRepo.Setup(x => x.GetOffspringAsync(individual.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(offspring.Select(x => x.Key));
 
-            _genotypeRepo.Setup(x => x.GetAsync(individual.Id, It.IsAny<CancellationToken>()))
+            _genotypeRepo.Setup(x => x.GetAsync(individual.Id, _locusId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(individualGenotype);
-            _genotypeRepo.Setup(x => x.GetAsync(otherParent.Id, It.IsAny<CancellationToken>()))
+            _genotypeRepo.Setup(x => x.GetAsync(otherParent.Id, _locusId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(otherParentGeno);
-            _genotypeRepo.Setup(x => x.GetOffspringGenotypesAsync(individual.Id, otherParent.Id, It.IsAny<CancellationToken>()))
+            _genotypeRepo.Setup(x => x.GetOffspringGenotypesAsync(individual.Id, otherParent.Id, _locusId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(offspring.Select(x => x.Value));
 
-            var result = await _calculator.CalculateGenotypesAsync(individual.Id).ConfigureAwait(false);
+            var result = await _calculator.CalculateGenotypesAsync(individual.Id, _locusId).ConfigureAwait(false);
 
             Assert.NotNull(result);
             Assert.NotEmpty(result);

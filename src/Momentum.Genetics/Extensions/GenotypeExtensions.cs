@@ -1,32 +1,29 @@
+using Momentum.Genetics.Interfaces;
 using Momentum.Genetics.Models;
 
 namespace Momentum.Genetics.Extensions
 {
     public static class GenotypeExtensions
     {
-        public static IEnumerable<Genotype<TAllele, TLocus>> BuildPotentialGenotypes<TAllele, TLocus>(
-                this Genotype<TAllele, TLocus> genotype)
-            where TAllele : Allele
-            where TLocus : Locus<TAllele>, new()
+        public static IEnumerable<IGenotype> BuildPotentialGenotypes(
+                this IGenotype genotype, IEnumerable<Allele> locusAlleles)
         {
-            var locus = new TLocus();
-
-            var result = new List<Genotype<TAllele, TLocus>>();
+            var result = new List<IGenotype>();
 
             if (genotype.DominantAllele == null)
             {
-                result = locus.Alleles.SelectMany(dominant =>
-                    locus.Alleles
+                result = locusAlleles.SelectMany(dominant =>
+                    locusAlleles
                         .Where(other => other.Ordinal >= dominant.Ordinal)
-                        .Select(other => new Genotype<TAllele, TLocus>(dominant, other)))
+                        .Select(other => new Genotype(dominant, other) as IGenotype))
                     .ToList();
             }
             else if (genotype.OtherAllele == null)
             {
                 // dominant is known, need to fill in the other allele.
-                result = locus.Alleles
+                result = locusAlleles
                     .Where(other => other.Ordinal >= genotype.DominantAllele.Ordinal)
-                    .Select(other => new Genotype<TAllele, TLocus>(genotype.DominantAllele, other))
+                    .Select(other => new Genotype(genotype.DominantAllele, other) as IGenotype)
                     .ToList();
             }
             else

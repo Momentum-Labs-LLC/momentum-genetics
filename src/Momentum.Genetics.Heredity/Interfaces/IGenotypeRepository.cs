@@ -1,13 +1,16 @@
+using Momentum.Genetics.Interfaces;
 using Momentum.Genetics.Models;
+using Momentum.Repositories.Interfaces;
 
 namespace Momentum.Genetics.Heredity.Interfaces
 {
-    public interface IGenotypeRepository<TAllele, TLocus, TId>
-        where TAllele : Allele
-        where TLocus : Locus<TAllele>, new()
+    public interface IGenotypeRepository<TId> : IRepository<Guid, IGenotype>
         where TId : struct
     {
-        Task<Genotype<TAllele, TLocus>> GetAsync(TId individualId, CancellationToken token = default);
-        Task<IEnumerable<Genotype<TAllele, TLocus>>> GetOffspringGenotypesAsync(TId paternalId, TId maternalId, CancellationToken token = default);
+        Task<IGenotype> GetAsync(TId individualId, Guid locusId, CancellationToken token = default);
+        Task<IEnumerable<IGenotype>> GetOffspringGenotypesAsync(TId paternalId, TId maternalId, Guid locusId, CancellationToken token = default);
     } // end interface
+
+    public interface IGenotypeRepository : IGenotypeRepository<Guid>
+    {} // end interface
 } // end namespace
