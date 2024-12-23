@@ -41,6 +41,15 @@ namespace Momentum.Genetics.Heredity
             var individual = await _individualRepository.GetAsync(individualId, token).ConfigureAwait(false);
             var genotype = await _genotypeRepository.GetAsync(individualId, locusId, token).ConfigureAwait(false);
             
+            if(genotype == null) 
+            {
+                // there is no genotype stored for this individual and locus
+                genotype = new Genotype() 
+                {
+                    LocusId = locusId
+                };
+            }
+
             if(genotype.DominantAllele == null 
                 || genotype.OtherAllele == null)
             {
@@ -75,7 +84,7 @@ namespace Momentum.Genetics.Heredity
 
         protected virtual async Task<IEnumerable<GenotypeCount>> GetPotentialGenotypesFromParentsAsync(
             TIndividual individual,
-            IGenotype individualGenotype,
+            IGenotype? individualGenotype,
             CancellationToken token = default)
         {
             IGenotype paternalGenotype = new Genotype() { LocusId = individualGenotype.LocusId };

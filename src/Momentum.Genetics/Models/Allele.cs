@@ -47,6 +47,8 @@ namespace Momentum.Genetics.Models
         /// </summary>
         public DominanceEnum Dominance { get; set; } = DominanceEnum.Dominant;
 
+        public Dictionary<string, DominanceEnum> Relationships { get; set; }
+
         /// <summary>
         /// Gets or sets if this allele is the wild type gene.
         /// </summary>

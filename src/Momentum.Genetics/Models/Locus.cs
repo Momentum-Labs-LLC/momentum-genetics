@@ -6,11 +6,6 @@ namespace Momentum.Genetics.Models
     public class Locus
     {
         /// <summary>
-        /// Gets the alleles of a locus.
-        /// </summary>
-        public IEnumerable<Allele> Alleles { get; set; }
-
-        /// <summary>
         /// Gets or sets the identifier.
         /// </summary>
         public Guid Id { get; set; }
@@ -29,6 +24,11 @@ namespace Momentum.Genetics.Models
         /// Gets or sets the description of the gene.
         /// </summary>
         public string? Description { get; set; }
+        
+        /// <summary>
+        /// Gets the alleles of a locus.
+        /// </summary>
+        public IEnumerable<Allele> Alleles { get; set; }
 
         /// <summary>
         /// Gets or sets index of the base pair at which this gene begins on a chromosome.
